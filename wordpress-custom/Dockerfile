@@ -1,15 +1,24 @@
-FROM geodata/mapserver:latest
+FROM osgeo/gdal:alpine-small-latest
 
 USER root
 
-RUN apt-get update && apt-get install -y \
-    python3 python3-pip python3-setuptools python3-wheel \
-    gdal-bin python3-gdal python3-numpy python3-pandas \
-    libgdal-dev libproj-dev build-essential \
- && pip3 install --upgrade pip \
- && pip3 install --no-cache-dir cython geopandas \
- && apt-get clean \
- && rm -rf /var/lib/apt/lists/*
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
-USER www-data
+RUN apk update && apk add --no-cache \
+    python3 \
+    py3-pip \
+    py3-numpy \
+    py3-pandas \
+    py3-setuptools \
+    py3-wheel \
+    py3-cython \
+    geos-dev \
+    proj-dev \
+    && pip install --upgrade pip \
+    && pip install --no-cache-dir geopandas \
+    && rm -rf /var/cache/apk/*
+
+USER 1000
 
