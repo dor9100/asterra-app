@@ -1,0 +1,32 @@
+name: wordpress
+
+container:
+  name: wordpress
+  port: 8080
+
+replicaCount: 1
+
+image:
+  repository: "REPLACE_ME_ECR_REPO"
+  tag: latest
+  pullPolicy: Always
+  
+hpa:
+  minReplicas: 1
+  maxReplicas: 3
+  cpuUtilizationPercentage: 60
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 500m
+    memory: 1Gi
+
+service:
+  type: LoadBalancer
+  port: 80
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-eip-allocations: "REPLACE_ME_ENI"
+    service.beta.kubernetes.io/aws-load-balancer-security-groups: "REPLACE_ME_SG"

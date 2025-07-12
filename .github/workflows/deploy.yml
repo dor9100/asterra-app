@@ -1,0 +1,87 @@
+name: Build and Push to ECR
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'app/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'app/**'
+    types:
+      - closed  # Uncomment to auto-trigger on app changes to main
+
+env:
+  REGION: ${{ secrets.AWS_REGION }}
+  ECR_REPO: ${{ secrets.ECR_SAAS_APP_REPOSITORY }}
+  ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+  IMAGE_TAG_FILE: .image-version
+
+permissions:
+  id-token: write
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'  # or use a matrix for multiple versions
+
+    - name: Run tests
+      run: |
+        pip install -r app/requirements.txt
+            PYTHONPATH=. pytest
+
+    - name: Configure AWS credentials from OIDC
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    - name: Log in to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    - name: Bump version
+      id: bump
+      run: |
+        VERSION=$(grep 'version:' helm/saas-app/Chart.yaml | awk '{print $2}')
+        NEW_VERSION=$(echo $VERSION | awk -F. -v OFS=. '{$NF+=1; print}')
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+        echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+        echo "$NEW_VERSION" > $IMAGE_TAG_FILE
+        echo "New version: $NEW_VERSION"
+
+
+    - name: Build Docker image
+      run: |
+        docker build -t $ECR_REGISTRY/$ECR_REPO:$NEW_VERSION ./app
+
+    - name: Push Docker image to ECR
+      run: |
+        docker push $ECR_REGISTRY/$ECR_REPO:$NEW_VERSION
+
+    - name: Update Helm Chart version and values
+      run: |
+        sed -i "s/^version:.*/version: $NEW_VERSION/" helm/saas-app/Chart.yaml
+        sed -i "s/^appVersion:.*/appVersion: \"$NEW_VERSION\"/" helm/saas-app/Chart.yaml
+        sed -i "s/tag:.*/tag: \"$NEW_VERSION\"/" helm/saas-app/values.yaml
+
+    - name: Commit and push updated Helm files
+      run: |
+        git config user.email "ci@github.com"
+        git config user.name "GitHub Actions"
+        git add helm/saas-app/Chart.yaml helm/saas-app/values.yaml $IMAGE_TAG_FILE
+        git commit -m "CI: Release version $NEW_VERSION [ci skip]"
+        git push origin main

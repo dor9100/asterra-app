@@ -1,0 +1,29 @@
+image:
+  repository: "REPLACE_ME_ECR_REPO"
+  tag: "0.1.15"
+  pullPolicy: IfNotPresent
+
+serviceAccount:
+  name: geojson-loader
+  annotations:
+    eks.amazonaws.com/role-arn: "REPLACE_ME_IAM_ROLE_ARN"
+
+resources: {}
+
+secretName: geojson-loader-secrets
+
+envFromSecret:
+  - name: AWS_REGION
+    key: AWS_REGION
+  - name: SQS_QUEUE_URL
+    key: SQS_QUEUE_URL
+  - name: SECRET_ARN
+    key: SECRET_ARN
+  - name: TABLE_NAME
+    key: TABLE_NAME
+  - name: HOST_ENDPOINT
+    key: HOST_ENDPOINT
+  - name: DB_NAME
+    key: DB_NAME
+  - name: DB_PORT
+    key: DB_PORT

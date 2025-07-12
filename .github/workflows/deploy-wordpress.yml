@@ -1,0 +1,53 @@
+name: Build and Push WordPress GeoPandas Image
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'helm/wordpress-custom/**'
+      - 'wordpress-custom/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'wordpress-custom/**'
+    types:
+      - closed
+
+env:
+  REGION: ${{ secrets.AWS_REGION }}
+  ECR_REPO: ${{ secrets.ECR_WORDPRESS_REPOSITORY }}
+  ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials from OIDC
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+        aws-region: ${{ env.REGION }}
+
+    - name: Log in to Amazon ECR
+      uses: aws-actions/amazon-ecr-login@v2
+
+    - name: Build Docker image
+      run: |
+        IMAGE_URI=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPO }}:latest
+        docker build -t $IMAGE_URI ./wordpress-custom
+
+    - name: Push Docker image to ECR
+      run: |
+        IMAGE_URI=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPO }}:latest
+        docker push $IMAGE_URI

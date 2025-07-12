@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: geojson-loader
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: geojson-loader
+  template:
+    metadata:
+      labels:
+        app: geojson-loader
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      containers:
+        - name: geojson-loader
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            {{- range .Values.envFromSecret }}
+            - name: {{ .name }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.secretName }}
+                  key: {{ .key }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
