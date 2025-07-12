@@ -1,6 +1,6 @@
 apiVersion: v2
-name: geojson-loader
-description: A Kubernetes app to load GeoJSON files from S3 to RDS
+name: wordpress-custom
+description: A customized WordPress Helm chart with GeoPandas installed
 type: application
-version: 0.1.14
-appVersion: "0.1.14"
+version: 0.1.0
+appVersion: "0.1.0"

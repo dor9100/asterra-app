@@ -1,0 +1,20 @@
+name: gdal
+replicaCount: 1
+
+image:
+  repository: osgeo/gdal
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+container:
+  name: gdal
+  command: ["sleep"]
+  args: ["infinity"]
+
+resources: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

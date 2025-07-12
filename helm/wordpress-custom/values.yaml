@@ -8,9 +8,9 @@ replicaCount: 1
 
 image:
   repository: "REPLACE_ME_ECR_REPO"
-  tag: latest
+  tag: "0.1.0"
   pullPolicy: Always
-  
+
 hpa:
   minReplicas: 1
   maxReplicas: 3
