@@ -44,10 +44,12 @@ jobs:
 
     - name: Build Docker image
       run: |
-        IMAGE_URI=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPO }}:latest
+        IMAGE_TAG=${{ github.sha }}
+        IMAGE_URI=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPO }}:$IMAGE_TAG
         docker build -t $IMAGE_URI ./wordpress-custom
 
     - name: Push Docker image to ECR
       run: |
-        IMAGE_URI=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPO }}:latest
+        IMAGE_TAG=${{ github.sha }}
+        IMAGE_URI=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPO }}:$IMAGE_TAG
         docker push $IMAGE_URI
