@@ -1,4 +1,4 @@
-FROM osgeo/gdal:alpine-small-latest
+FROM osgeo/gdal:ubuntu-small-3.7.3
 
 USER root
 
