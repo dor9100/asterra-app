@@ -8,7 +8,7 @@ replicaCount: 1
 
 image:
   repository: "REPLACE_ME_ECR_REPO"
-  tag: "0.1.0"
+  tag: "0.1.1"
   pullPolicy: Always
 
 hpa:
