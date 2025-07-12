@@ -1,4 +1,4 @@
-FROM osgeo/gdal:ubuntu-small-3.7.3
+FROM osgeo/gdal:ubuntu-small-3.6.3
 
 USER root
 
