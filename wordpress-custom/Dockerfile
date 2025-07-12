@@ -16,8 +16,10 @@ RUN apt-get update && apt-get install -y \
  && rm -rf /var/lib/apt/lists/*
 
 ENV PATH="/venv/bin:$PATH"
-
+WORKDIR /app
+COPY static/ /app/
 USER 1000
+
 
 
 CMD ["python", "-m", "http.server", "8080"]
