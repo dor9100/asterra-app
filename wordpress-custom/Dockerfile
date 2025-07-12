@@ -6,19 +6,18 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-RUN apk update && apk add --no-cache \
-    python3 \
-    py3-pip \
-    py3-numpy \
-    py3-pandas \
-    py3-setuptools \
-    py3-wheel \
-    py3-cython \
-    geos-dev \
-    proj-dev \
-    && pip install --upgrade pip \
-    && pip install --no-cache-dir geopandas \
-    && rm -rf /var/cache/apk/*
+RUN apt-get update && apt-get install -y \
+    python3-pip \
+    python3-numpy \
+    python3-pandas \
+    python3-setuptools \
+    python3-wheel \
+    cython \
+    libgeos-dev \
+    libproj-dev \
+    && pip3 install --upgrade pip \
+    && pip3 install --no-cache-dir geopandas \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 USER 1000
-
