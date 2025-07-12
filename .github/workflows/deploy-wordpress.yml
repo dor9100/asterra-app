@@ -23,7 +23,7 @@ env:
   IMAGE_TAG_FILE: .wordpress-image-version
 permissions:
   id-token: write
-  contents: read
+  contents: write
 
 jobs:
   build:
