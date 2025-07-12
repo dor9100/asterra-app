@@ -20,7 +20,7 @@ env:
   REGION: ${{ secrets.AWS_REGION }}
   ECR_REPO: ${{ secrets.ECR_WORDPRESS_REPOSITORY }}
   ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
-
+  IMAGE_TAG_FILE: .wordpress-image-version
 permissions:
   id-token: write
   contents: read
@@ -42,14 +42,34 @@ jobs:
     - name: Log in to Amazon ECR
       uses: aws-actions/amazon-ecr-login@v2
 
+    - name: Bump WordPress Chart Version
+      id: bump
+      run: |
+        VERSION=$(grep 'version:' helm/wordpress-custom/Chart.yaml | awk '{print $2}')
+        NEW_VERSION=$(echo $VERSION | awk -F. -v OFS=. '{$NF+=1; print}')
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+        echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+        echo "$NEW_VERSION" > $IMAGE_TAG_FILE
+        echo "New version: $NEW_VERSION"
+        
     - name: Build Docker image
       run: |
-        IMAGE_TAG=${{ github.sha }}
-        IMAGE_URI=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPO }}:$IMAGE_TAG
-        docker build -t $IMAGE_URI ./wordpress-custom
+        docker build -t $ECR_REGISTRY/$ECR_REPO:$NEW_VERSION ./wordpress-custom
 
     - name: Push Docker image to ECR
       run: |
-        IMAGE_TAG=${{ github.sha }}
-        IMAGE_URI=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPO }}:$IMAGE_TAG
-        docker push $IMAGE_URI
+        docker push $ECR_REGISTRY/$ECR_REPO:$NEW_VERSION
+
+    - name: Update Helm Chart version and image tag
+      run: |
+        sed -i "s/^version:.*/version: $NEW_VERSION/" helm/wordpress-custom/Chart.yaml
+        sed -i "s/^appVersion:.*/appVersion: \"$NEW_VERSION\"/" helm/wordpress-custom/Chart.yaml
+        sed -i "s/tag:.*/tag: \"$NEW_VERSION\"/" helm/wordpress-custom/values.yaml
+
+    - name: Commit and push updated Helm chart
+      run: |
+        git config user.email "ci@github.com"
+        git config user.name "GitHub Actions"
+        git add helm/wordpress-custom/Chart.yaml helm/wordpress-custom/values.yaml $IMAGE_TAG_FILE
+        git commit -m "CI: Release wordpress version $NEW_VERSION [ci skip]" || echo "No changes to commit"
+        git push origin main
