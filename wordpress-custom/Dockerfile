@@ -1,4 +1,4 @@
-FROM osgeo/gdal:ubuntu-small-3.6.3
+FROM ghcr.io/osgeo/gdal:ubuntu-small-latest
 
 USER root
 
@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
     python3-pandas \
     python3-setuptools \
     python3-wheel \
-    cython \
+    cython3 \
     libgeos-dev \
     libproj-dev \
     && pip3 install --upgrade pip \
