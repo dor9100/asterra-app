@@ -19,7 +19,3 @@ ENV PATH="/venv/bin:$PATH"
 
 
 USER 1000
-
-
-
-CMD ["mapserv", "-v"]
